@@ -18,8 +18,7 @@ package org.apache.ibatis.parsing;
 import java.util.Properties;
 
 /**
- * @author Clinton Begin
- * @author Kazuki Shimizu
+ *  动态属性解析器
  */
 public class PropertyParser {
 
@@ -51,8 +50,11 @@ public class PropertyParser {
   }
 
   public static String parse(String string, Properties variables) {
+    //1.创建VariableTokenHandler对象
     VariableTokenHandler handler = new VariableTokenHandler(variables);
+    //2.创建GenericTokenParser对象
     GenericTokenParser parser = new GenericTokenParser("${", "}", handler);
+    //3.执行解析
     return parser.parse(string);
   }
 

@@ -45,10 +45,29 @@ import org.xml.sax.SAXParseException;
  */
 public class XPathParser {
 
+  /**
+   * XML Document对象，XML文件被解析后生成的对象
+   */
   private final Document document;
+
+  /**
+   * 是否验证
+   */
   private boolean validation;
+
+  /**
+   * XML实体解析器
+   */
   private EntityResolver entityResolver;
+
+  /**
+   * 变量Properties对象
+   */
   private Properties variables;
+
+  /**
+   * Java XPath对象
+   */
   private XPath xpath;
 
   public XPathParser(String xml) {
@@ -111,8 +130,17 @@ public class XPathParser {
     this.document = document;
   }
 
+  /**
+   * 构造XPathParser对象
+   * @param xml XML文件地址
+   * @param validation 是否校验XML
+   * @param variables 变量Properties对象
+   * @param entityResolver XML实体解析器
+   */
   public XPathParser(String xml, boolean validation, Properties variables, EntityResolver entityResolver) {
+    //调用公用方法来完成一些初始化操作
     commonConstructor(validation, variables, entityResolver);
+    //调用方法将XML文件解析成Document对象
     this.document = createDocument(new InputSource(new StringReader(xml)));
   }
 
@@ -140,7 +168,9 @@ public class XPathParser {
   }
 
   public String evalString(Object root, String expression) {
+    //1.获取值
     String result = (String) evaluate(expression, root, XPathConstants.STRING);
+    //2.基于variables替换动态值，如果result为动态值
     result = PropertyParser.parse(result, variables);
     return result;
   }
@@ -218,6 +248,13 @@ public class XPathParser {
     return new XNode(this, node, variables);
   }
 
+  /**
+   * 获取指定元素或节点的值
+   * @param expression 表达式
+   * @param root 指定节点
+   * @param returnType 返回类型
+   * @return 值
+   */
   private Object evaluate(String expression, Object root, QName returnType) {
     try {
       return xpath.evaluate(expression, root, returnType);
@@ -226,11 +263,19 @@ public class XPathParser {
     }
   }
 
+  /**
+   * 根据输入的InputSource创建Document对象
+   * @param inputSource XML的InputSource对象
+   * @return Document对象
+   *
+   * 此方法就是对XPath的API进行调用
+   */
   private Document createDocument(InputSource inputSource) {
     // important: this must only be called AFTER common constructor
     try {
+      //1.创建DocumentBuilderFactory对象
       DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-      factory.setValidating(validation);
+      factory.setValidating(validation);//设置是否需要校验
 
       factory.setNamespaceAware(false);
       factory.setIgnoringComments(true);
@@ -238,8 +283,9 @@ public class XPathParser {
       factory.setCoalescing(false);
       factory.setExpandEntityReferences(true);
 
+      //2.创建DocumentBuilder对象
       DocumentBuilder builder = factory.newDocumentBuilder();
-      builder.setEntityResolver(entityResolver);
+      builder.setEntityResolver(entityResolver);//设置实体解析器
       builder.setErrorHandler(new ErrorHandler() {
         @Override
         public void error(SAXParseException exception) throws SAXException {
@@ -255,16 +301,24 @@ public class XPathParser {
         public void warning(SAXParseException exception) throws SAXException {
         }
       });
+      //3.解析XML文件
       return builder.parse(inputSource);
     } catch (Exception e) {
       throw new BuilderException("Error creating document instance.  Cause: " + e, e);
     }
   }
 
+  /**
+   * 从构造器中抽取出来的公用方法
+   * @param validation
+   * @param variables
+   * @param entityResolver
+   */
   private void commonConstructor(boolean validation, Properties variables, EntityResolver entityResolver) {
     this.validation = validation;
     this.entityResolver = entityResolver;
     this.variables = variables;
+    //创建 XPathFactory对象
     XPathFactory factory = XPathFactory.newInstance();
     this.xpath = factory.newXPath();
   }
