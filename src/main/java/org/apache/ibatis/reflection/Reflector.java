@@ -39,42 +39,88 @@ import org.apache.ibatis.reflection.invoker.SetFieldInvoker;
 import org.apache.ibatis.reflection.property.PropertyNamer;
 
 /**
- * This class represents a cached set of class definition information that
- * allows for easy mapping between property names and getter/setter methods.
- *
- * @author Clinton Begin
+ * 这个类表示class定义的一些cache，允许一些在name和getter/setter方法之间的映射
+ * 每个class对应一个Reflector
  */
 public class Reflector {
 
-  private final Class<?> type;
-  private final String[] readablePropertyNames;
-  private final String[] writeablePropertyNames;
-  private final Map<String, Invoker> setMethods = new HashMap<>();
-  private final Map<String, Invoker> getMethods = new HashMap<>();
-  private final Map<String, Class<?>> setTypes = new HashMap<>();
-  private final Map<String, Class<?>> getTypes = new HashMap<>();
-  private Constructor<?> defaultConstructor;
+    /**
+     * 对应的类
+     */
+    private final Class<?> type;
+    /**
+     * 可读属性数组
+     */
+    private final String[] readablePropertyNames;
+    /**
+     * 可写属性集合
+     */
+    private final String[] writeablePropertyNames;
+    /**
+     * 属性对应的setting方法的映射
+     * key为属性名
+     * value为Invoker对象
+     */
+    private final Map<String, Invoker> setMethods = new HashMap<>();
+    /**
+     * 属性对应的getting方法的映射
+     * key 为属性名称
+     * value为Invoker对象
+     */
+    private final Map<String, Invoker> getMethods = new HashMap<>();
+    /**
+     * 属性对应的setting方法的方法参数类型的映射
+     * key为属性名称
+     * value为方法参数类型
+     */
+    private final Map<String, Class<?>> setTypes = new HashMap<>();
+    /**
+     * 属性对应的getting方法的方法参数类型映射
+     *
+     * key为属性名称
+     * value为方法参数类型
+     */
+    private final Map<String, Class<?>> getTypes = new HashMap<>();
+    /**
+     * 默认构造器
+     */
+    private Constructor<?> defaultConstructor;
 
-  private Map<String, String> caseInsensitivePropertyMap = new HashMap<>();
+    /**
+     * 不区分大小写的属性集合
+     */
+    private Map<String, String> caseInsensitivePropertyMap = new HashMap<>();
 
-  public Reflector(Class<?> clazz) {
-    type = clazz;
-    addDefaultConstructor(clazz);
-    addGetMethods(clazz);
-    addSetMethods(clazz);
-    addFields(clazz);
-    readablePropertyNames = getMethods.keySet().toArray(new String[getMethods.keySet().size()]);
-    writeablePropertyNames = setMethods.keySet().toArray(new String[setMethods.keySet().size()]);
-    for (String propName : readablePropertyNames) {
-      caseInsensitivePropertyMap.put(propName.toUpperCase(Locale.ENGLISH), propName);
-    }
-    for (String propName : writeablePropertyNames) {
-      caseInsensitivePropertyMap.put(propName.toUpperCase(Locale.ENGLISH), propName);
-    }
+    /**
+     * 构造器
+     * @param clazz
+     */
+    public Reflector(Class<?> clazz) {
+        //设置对应的类
+        type = clazz;
+        //1.初始化defaultConstructor
+        addDefaultConstructor(clazz);
+        //2.初始化getMethods和getTypes，通过遍历getting方法
+        addGetMethods(clazz);
+        //3.初始化setMethods和setTypes，通过遍历setting方法
+        addSetMethods(clazz);
+        //4.初始化getMethods + getTypes和setMethods + setTypes，通过遍历fields属性
+        addFields(clazz);
+        //5.初始化readablePropertyNames,writeablePropertyNames,caseInsensitivePropertyMap属性
+        readablePropertyNames = getMethods.keySet().toArray(new String[getMethods.keySet().size()]);
+        writeablePropertyNames = setMethods.keySet().toArray(new String[setMethods.keySet().size()]);
+        for (String propName : readablePropertyNames) {
+            caseInsensitivePropertyMap.put(propName.toUpperCase(Locale.ENGLISH), propName);
+        }
+        for (String propName : writeablePropertyNames) {
+            caseInsensitivePropertyMap.put(propName.toUpperCase(Locale.ENGLISH), propName);
+        }
   }
 
   private void addDefaultConstructor(Class<?> clazz) {
+        //获取指定clazz的所有构造器
     Constructor<?>[] consts = clazz.getDeclaredConstructors();
+    //遍历所有的构造方法，查找无法的构造方法，设置为当前reflector的默认构造器
     for (Constructor<?> constructor : consts) {
       if (constructor.getParameterTypes().length == 0) {
           this.defaultConstructor = constructor;
@@ -343,10 +389,7 @@ public class Reflector {
   }
 
   /**
-   * Checks whether can control member accessible.
-   *
-   * @return If can control member accessible, it return {@literal true}
-   * @since 3.5.0
+   * 判断，是否可以修改可访问性
    */
   public static boolean canControlMemberAccessible() {
     try {
