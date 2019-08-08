@@ -19,7 +19,7 @@ import org.apache.ibatis.reflection.MetaObject;
 import org.apache.ibatis.reflection.ReflectionException;
 
 /**
- * @author Clinton Begin
+ * ObjectWrapperFactory接口的默认实现
  */
 public class DefaultObjectWrapperFactory implements ObjectWrapperFactory {
 

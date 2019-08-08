@@ -128,23 +128,39 @@ public class Reflector {
     }
   }
 
+    /**
+     * 初始化getMethods和getTypes，通过遍历getting方法
+     * @param cls
+     */
   private void addGetMethods(Class<?> cls) {
+      //1.属性与其getting方法的映射
     Map<String, List<Method>> conflictingGetters = new HashMap<>();
+    //2.获得所有方法
     Method[] methods = getClassMethods(cls);
+    //3.遍历所有方法
     for (Method method : methods) {
+        //如果参数大于0，说明不是getting方法，跳过
       if (method.getParameterTypes().length > 0) {
         continue;
       }
+      //以get和is方法名开头，说明是getting方法
       String name = method.getName();
       if ((name.startsWith("get") && name.length() > 3)
           || (name.startsWith("is") && name.length() > 2)) {
+          //获得属性
         name = PropertyNamer.methodToProperty(name);
+        //添加到conflictingGetter中
         addMethodConflict(conflictingGetters, name, method);
       }
     }
+    //4.解决getting冲突方法
     resolveGetterConflicts(conflictingGetters);
   }
 
+    /**
+     * 解决getting冲突方法
+     * @param conflictingGetters
+     */
   private void resolveGetterConflicts(Map<String, List<Method>> conflictingGetters) {
     for (Entry<String, List<Method>> entry : conflictingGetters.entrySet()) {
       Method winner = null;
@@ -284,6 +300,10 @@ public class Reflector {
     return result;
   }
 
+    /**
+     * 该方法是addGetMethods()和addSetMethods()方法的补充，因为有些field不存在setting或getting方法
+     * @param clazz
+     */
   private void addFields(Class<?> clazz) {
     Field[] fields = clazz.getDeclaredFields();
     for (Field field : fields) {
@@ -326,30 +346,31 @@ public class Reflector {
   }
 
   /**
-   * This method returns an array containing all methods
-   * declared in this class and any superclass.
-   * We use this method, instead of the simpler Class.getMethods(),
-   * because we want to look for private methods as well.
-   *
-   * @param cls The class
-   * @return An array containing all methods in this class
+   * 该方法返回指定类的所有方法的一个数组，包含指定类的父类中的方法
+   * 我们使用该方法替换掉Class.getMethods()方法，因为我们想对private方法也能查找
    */
   private Method[] getClassMethods(Class<?> cls) {
+      //每个方法签名与该方法的映射
     Map<String, Method> uniqueMethods = new HashMap<>();
+    //循环类，类的父类，类的父类的父类，直到父类为Object
     Class<?> currentClass = cls;
     while (currentClass != null && currentClass != Object.class) {
+        //记录当前类定义的方法
       addUniqueMethods(uniqueMethods, currentClass.getDeclaredMethods());
 
       // we also need to look for interface methods -
       // because the class may be abstract
+        //记录接口中定义的方法
       Class<?>[] interfaces = currentClass.getInterfaces();
       for (Class<?> anInterface : interfaces) {
         addUniqueMethods(uniqueMethods, anInterface.getMethods());
       }
 
+      //获得父类
       currentClass = currentClass.getSuperclass();
     }
 
+    //转换成Method数组返回
     Collection<Method> methods = uniqueMethods.values();
 
     return methods.toArray(new Method[methods.size()]);

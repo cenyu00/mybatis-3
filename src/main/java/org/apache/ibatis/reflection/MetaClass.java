@@ -27,27 +27,33 @@ import org.apache.ibatis.reflection.invoker.MethodInvoker;
 import org.apache.ibatis.reflection.property.PropertyTokenizer;
 
 /**
- * @author Clinton Begin
+ * 类的元数据，基于Reflector和PropertyTokenizer，提供对指定类的各种骚操作
  */
 public class MetaClass {
 
   private final ReflectorFactory reflectorFactory;
   private final Reflector reflector;
 
+  //构造方法，指定reflectorFactory和reflector，一个MetaClass对象，对应一个class对象
   private MetaClass(Class<?> type, ReflectorFactory reflectorFactory) {
     this.reflectorFactory = reflectorFactory;
     this.reflector = reflectorFactory.findForClass(type);
   }
 
+  //创建指定类的MetaClass对象
   public static MetaClass forClass(Class<?> type, ReflectorFactory reflectorFactory) {
     return new MetaClass(type, reflectorFactory);
   }
 
+  //创建类的指定属性的类的MetaClass对象
   public MetaClass metaClassForProperty(String name) {
+    //获取属性的类
     Class<?> propType = reflector.getGetterType(name);
+    //创建MetaClass对象
     return MetaClass.forClass(propType, reflectorFactory);
   }
 
+  //查找指定属性
   public String findProperty(String name) {
     StringBuilder prop = buildProperty(name, new StringBuilder());
     return prop.length() > 0 ? prop.toString() : null;
@@ -89,7 +95,9 @@ public class MetaClass {
   }
 
   private MetaClass metaClassForProperty(PropertyTokenizer prop) {
+    //获得getting方法返回的类型
     Class<?> propType = getGetterType(prop);
+    //创建MetaClass对象
     return MetaClass.forClass(propType, reflectorFactory);
   }
 
@@ -145,11 +153,21 @@ public class MetaClass {
     }
   }
 
+  /**
+   * 判断指定属性是否有getting方法
+   * @param name
+   * @return
+   */
   public boolean hasGetter(String name) {
+    //创建PropertyTokenizer对象，对name进行分词
     PropertyTokenizer prop = new PropertyTokenizer(name);
+    //有子表达式
     if (prop.hasNext()) {
+      //判断是否有该属性的getting方法
       if (reflector.hasGetter(prop.getName())) {
+        //1.创建MetaClass对象
         MetaClass metaProp = metaClassForProperty(prop);
+        //递归判断子表达式children，是否有getting方法
         return metaProp.hasGetter(prop.getChildren());
       } else {
         return false;

@@ -18,6 +18,9 @@ package org.apache.ibatis.reflection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+/**
+ * ReflectorFactory的默认实现
+ */
 public class DefaultReflectorFactory implements ReflectorFactory {
   private boolean classCacheEnabled = true;
   private final ConcurrentMap<Class<?>, Reflector> reflectorMap = new ConcurrentHashMap<>();
@@ -37,10 +40,12 @@ public class DefaultReflectorFactory implements ReflectorFactory {
 
   @Override
   public Reflector findForClass(Class<?> type) {
+    //开启缓存，则从reflectorMap中获取
     if (classCacheEnabled) {
             // synchronized (type) removed see issue #461
-      return reflectorMap.computeIfAbsent(type, Reflector::new);
+      return reflectorMap.computeIfAbsent(type, Reflector::new);//不存在，则进行创建
     } else {
+      //关闭缓存，则创建Reflector对象
       return new Reflector(type);
     }
   }

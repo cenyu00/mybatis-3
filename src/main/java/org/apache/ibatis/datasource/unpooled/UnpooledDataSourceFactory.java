@@ -25,19 +25,31 @@ import org.apache.ibatis.reflection.MetaObject;
 import org.apache.ibatis.reflection.SystemMetaObject;
 
 /**
- * @author Clinton Begin
+ * 非池化的DataSourceFactory实现类
+ * 这个数据源的实现只是每次请求时打开和关闭连接
  */
 public class UnpooledDataSourceFactory implements DataSourceFactory {
 
   private static final String DRIVER_PROPERTY_PREFIX = "driver.";
   private static final int DRIVER_PROPERTY_PREFIX_LENGTH = DRIVER_PROPERTY_PREFIX.length();
 
+  /**
+   * DataSource对象，默认使用UnpooledDataSource
+   */
   protected DataSource dataSource;
 
+  /**
+   * 构造器
+   */
   public UnpooledDataSourceFactory() {
+    //创建一个UnpooledDataSource
     this.dataSource = new UnpooledDataSource();
   }
 
+  /**
+   * 将properties的属性，初始化到dataSource中
+   * @param properties
+   */
   @Override
   public void setProperties(Properties properties) {
     Properties driverProperties = new Properties();

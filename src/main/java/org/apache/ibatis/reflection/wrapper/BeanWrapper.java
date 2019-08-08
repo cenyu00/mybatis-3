@@ -27,7 +27,7 @@ import org.apache.ibatis.reflection.invoker.Invoker;
 import org.apache.ibatis.reflection.property.PropertyTokenizer;
 
 /**
- * @author Clinton Begin
+ * 普通对象
  */
 public class BeanWrapper extends BaseWrapper {
 
@@ -37,19 +37,30 @@ public class BeanWrapper extends BaseWrapper {
   public BeanWrapper(MetaObject metaObject, Object object) {
     super(metaObject);
     this.object = object;
+    //创建MetaClass对象
     this.metaClass = MetaClass.forClass(object.getClass(), metaObject.getReflectorFactory());
   }
 
+  /**
+   * 获取指定属性的值
+   * @param prop
+   * @return
+   */
   @Override
   public Object get(PropertyTokenizer prop) {
+    //获取集合类型的属性的指定位置的值
     if (prop.getIndex() != null) {
+      //获得集合类型的属性
       Object collection = resolveCollection(prop, object);
+      //获得指定位置的值
       return getCollectionValue(prop, collection);
+      //获得属性的值
     } else {
       return getBeanProperty(prop, object);
     }
   }
 
+  //设置指定属性的值
   @Override
   public void set(PropertyTokenizer prop, Object value) {
     if (prop.getIndex() != null) {
@@ -90,6 +101,7 @@ public class BeanWrapper extends BaseWrapper {
     }
   }
 
+  //获得指定属性的getting方法的返回值
   @Override
   public Class<?> getGetterType(String name) {
     PropertyTokenizer prop = new PropertyTokenizer(name);
@@ -143,13 +155,18 @@ public class BeanWrapper extends BaseWrapper {
     }
   }
 
+  //创建指定属性的值
   @Override
   public MetaObject instantiatePropertyValue(String name, PropertyTokenizer prop, ObjectFactory objectFactory) {
     MetaObject metaValue;
+    //获得setting方法的方法参数类型
     Class<?> type = getSetterType(prop.getName());
     try {
+      //创建对象
       Object newObject = objectFactory.create(type);
+      //创建MetaObject对象
       metaValue = MetaObject.forObject(newObject, metaObject.getObjectFactory(), metaObject.getObjectWrapperFactory(), metaObject.getReflectorFactory());
+      //设置当前对象的值
       set(prop, newObject);
     } catch (Exception e) {
       throw new ReflectionException("Cannot set value of property '" + name + "' because '" + name + "' is null and cannot be instantiated on instance of " + type.getName() + ". Cause:" + e.toString(), e);

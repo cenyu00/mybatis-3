@@ -18,7 +18,7 @@ package org.apache.ibatis.reflection.property;
 import java.util.Iterator;
 
 /**
- * @author Clinton Begin
+ * 属性分词器，支持爹地器的访问方式
  */
 public class PropertyTokenizer implements Iterator<PropertyTokenizer> {
   private String name;

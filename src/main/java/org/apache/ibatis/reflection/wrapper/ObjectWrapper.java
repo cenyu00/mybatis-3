@@ -22,12 +22,15 @@ import org.apache.ibatis.reflection.factory.ObjectFactory;
 import org.apache.ibatis.reflection.property.PropertyTokenizer;
 
 /**
- * @author Clinton Begin
+ * 对象包装器接口，基于MetaClass工具类，定义对指定对象的各种操作
+ * ObjectWrapper是MetaClass的指定类的具象化
  */
 public interface ObjectWrapper {
 
+  //获得值
   Object get(PropertyTokenizer prop);
 
+  //设置值
   void set(PropertyTokenizer prop, Object value);
 
   String findProperty(String name, boolean useCamelCaseMapping);
